@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor ItemDB com Tradução</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <h1>Editor ItemDB com Tradução</h1>
+
+    <!-- Formulário de Upload do arquivo -->
+    <div>
+        <label for="file-input">Carregue os item_db_ .yml:</label>
+        <input type="file" id="file-input" accept=".yml, .yaml">
+    </div>
+
+    <button onclick="processFile()">Carregar ItemDB</button>
+
+    <!-- Campo para inserir a chave da API do Divine Pride -->
+    <h3>Insira a chave da API do Divine Pride</h3>
+    <input type="text" id="api-key-input" placeholder="Sua chave de API" />
+
+    <!-- Seleção de idioma para tradução -->
+    <h3>Escolha o idioma para tradução:</h3>
+    <select id="language-select">
+        <option value="pt">Português</option>
+        <option value="en">Inglês</option>
+        <option value="ko-KR">Coreano</option>
+        <option value="es">Espanhol</option>
+    </select>
+
+    <!-- Área para editar o conteúdo YAML -->
+    <h2>Conteúdo YAML</h2>
+    <textarea id="yaml-editor" placeholder="Conteúdo do arquivo YAML será exibido aqui..." readonly></textarea>
+
+    <!-- Botões -->
+    <button onclick="translateNames()">Traduzir Nomes</button>
+    <button onclick="downloadFile()">Baixar Arquivo Modificado</button>
+
+    <!-- Modal de progresso -->
+    <div id="progress-modal">
+        <div class="modal-content">
+            <h3>Progresso da Tradução</h3>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progress-bar-fill">0%</div>
+            </div>
+            <p id="progress-text">0% Concluído</p>
+        </div>
+    </div>
+
+    <!-- Área de Logs -->
+    <h3>Logs</h3>
+    <div id="logs">
+        <pre id="logs-content">Nenhum log ainda.</pre>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script>
+        // Variável para armazenar o nome original do arquivo
+        let originalFileName = '';
+
+        // Função para adicionar mensagens ao log
+        function logMessage(message) {
+            const logsContent = document.getElementById('logs-content');
+            logsContent.textContent += message + "\n";
+            logsContent.scrollTop = logsContent.scrollHeight;  // Auto-scroll para o fim do log
+        }
+
+        // Função para carregar o arquivo YAML
+        function processFile() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Por favor, selecione um arquivo YAML primeiro.');
+                return;
+            }
+
+            // Armazenar o nome do arquivo original
+            originalFileName = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    // Parse o arquivo YAML
+                    const yamlContent = e.target.result;
+                    const parsedData = jsyaml.load(yamlContent);
+
+                    // Exibe o conteúdo no textarea para edição
+                    document.getElementById('yaml-editor').value = yamlContent;
+
+                    logMessage(`Arquivo carregado: ${originalFileName}`);
+                } catch (error) {
+                    alert('Erro ao processar o arquivo YAML: ' + error.message);
+                    logMessage(`Erro ao processar o arquivo: ${error.message}`);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Função para buscar o nome do item ou monstro na API do Divine Pride
+        async function fetchItemName(itemId, apiKey, language = 'en') {
+            const url = `https://divine-pride.net/api/database/item/${itemId}?apiKey=${apiKey}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    'Accept-Language': language
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return data.name || null;
+            } else {
+                logMessage(`Erro ao buscar item ID ${itemId}: ${response.status}`);
+                return null;
+            }
+        }
+
+        // Função para traduzir todos os nomes dos itens no arquivo YAML
+        async function translateNames() {
+            const apiKey = document.getElementById('api-key-input').value;  // Pega a chave da API inserida pelo usuário
+            if (!apiKey) {
+                alert("Por favor, insira a chave da API do Divine Pride.");
+                logMessage("Erro: Chave da API não fornecida.");
+                return;
+            }
+
+            const language = document.getElementById('language-select').value;  // Pega o idioma selecionado
+
+            const yamlContent = document.getElementById('yaml-editor').value;
+            const parsedData = jsyaml.load(yamlContent);
+
+            if (!parsedData.Body) {
+                alert("O arquivo não contém uma lista de itens.");
+                logMessage("Erro: Arquivo não contém itens para traduzir.");
+                return;
+            }
+
+            // Mostrar o modal de progresso
+            document.getElementById('progress-modal').style.display = 'block';
+
+            // Itera sobre cada item e traduz o campo 'Name' usando a API do Divine Pride
+            let totalItems = parsedData.Body.length;
+            let translatedItems = 0;
+
+            for (let item of parsedData.Body) {
+                const itemId = item.Id;
+                const originalName = item.Name;
+
+                // Chama a API do Divine Pride para buscar o nome
+                const translatedName = await fetchItemName(itemId, apiKey, language);
+
+                if (translatedName) {
+                    item.Name = translatedName;
+                } else {
+                    logMessage(`Nome do item com ID ${itemId} não encontrado, mantendo o nome original.`);
+                }
+
+                // Atualiza o progresso
+                translatedItems++;
+                updateProgress(translatedItems, totalItems);
+            }
+
+            // Atualiza o conteúdo do textarea com o YAML modificado
+            const modifiedYaml = jsyaml.dump(parsedData);
+            document.getElementById('yaml-editor').value = modifiedYaml;
+
+            // Esconde o modal de progresso após concluir
+            document.getElementById('progress-modal').style.display = 'none';
+
+            logMessage("Tradução concluída.");
+        }
+
+        // Função para atualizar o progresso
+        function updateProgress(translatedItems, totalItems) {
+            const progress = (translatedItems / totalItems) * 100;
+            const progressBar = document.getElementById('progress-bar-fill');
+            const progressText = document.getElementById('progress-text');
+
+            progressBar.style.width = `${progress}%`;
+            progressText.innerText = `${Math.round(progress)}% Concluído`;
+        }
+
+        // Função para baixar o arquivo modificado
+        function downloadFile() {
+            const modifiedYaml = document.getElementById('yaml-editor').value;
+            const blob = new Blob([modifiedYaml], { type: 'application/x-yaml' });
+            const link = document.createElement('a');
+
+            // Use o nome original do arquivo com o sufixo do idioma selecionado
+            const outputFileName = originalFileName.replace(/\.yml|\.yaml/, `-${document.getElementById('language-select').value}.yml`);
+            link.href = URL.createObjectURL(blob);
+            link.download = outputFileName;  // Nome do arquivo a ser baixado
+            link.click();
+
+            logMessage(`Arquivo ${outputFileName} gerado para download.`);
+        }
+    </script>
+
+</body>
+
+</html>
