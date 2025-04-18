@@ -48,7 +48,7 @@
             <div class="progress-bar">
                 <div class="progress-bar-fill" id="progress-bar-fill">0%</div>
             </div>
-            <p id="progress-text">0% Concluído</p>
+            <p id="progress-text">Concluído</p>
         </div>
     </div>
 
@@ -184,10 +184,10 @@
         function updateProgress(translatedItems, totalItems) {
             const progress = (translatedItems / totalItems) * 100;
             const progressBar = document.getElementById('progress-bar-fill');
-            const progressText = document.getElementById('progress-text');
+            const progressText = document.getElementById('progress-bar-fill');
 
             progressBar.style.width = `${progress}%`;
-            progressText.innerText = `${Math.round(progress)}% Concluído`;
+            progressText.innerText = `${Math.round(progress)}%`;
         }
 
         // Função para baixar o arquivo modificado

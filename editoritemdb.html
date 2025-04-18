@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor ItemDB</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <h1>Editor ItemDB</h1>
+
+    <!-- Formulário de Upload do arquivo -->
+    <div>
+        <label for="file-input">Carregue o item_db.yml:</label>
+        <input type="file" id="file-input" accept=".yml, .yaml">
+    </div>
+
+    <button onclick="processFile()">Carregar ItemDB</button>
+
+    <!-- Área de Progresso -->
+    <div id="progress-bar-container">
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progress-bar-fill">0%</div>
+        </div>
+        <p id="progress-text">Concluído</p>
+    </div>
+
+    <!-- Lista de Itens -->
+    <div id="item-list-modal">
+        <h3>Itens</h3>
+        <ul id="item-list">
+            <!-- Itens carregados aparecerão aqui -->
+        </ul>
+    </div>
+
+    <!-- Área de Logs -->
+    <h3>Logs</h3>
+    <div id="logs">
+        <pre id="logs-content">Nenhum log ainda.</pre>
+    </div>
+
+    <!-- Formulário de Edição do Item -->
+    <h3>Editar Item</h3>
+    <div id="edit-item-form" style="display: none;">
+        <label for="item-id">ID:</label>
+        <input type="text" id="item-id" disabled>
+
+        <label for="item-aegisname">AegisName:</label>
+        <input type="text" id="item-aegisname" disabled>
+
+        <label for="item-name">Name:</label>
+        <input type="text" id="item-name">
+
+        <label for="item-type">Type:</label>
+        <select id="item-type" onchange="updateSubTypeOptions()">
+            <option value="Healing">Healing</option>
+            <option value="Usable">Usable</option>
+            <option value="Etc">Etc</option>
+            <option value="Armor">Armor</option>
+            <option value="Weapon">Weapon</option>
+            <option value="Card">Card</option>
+            <option value="PetEgg">PetEgg</option>
+            <option value="PetArmor">PetArmor</option>
+            <option value="Ammo">Ammo</option>
+            <option value="DelayConsume">DelayConsume</option>
+            <option value="ShadowGear">ShadowGear</option>
+            <option value="Cash">Cash</option>
+        </select>
+
+        <label for="item-subtype">SubType:</label>
+        <select id="item-subtype">
+            <!-- As opções serão carregadas dinamicamente -->
+        </select>
+
+        <label for="item-buy">Buy:</label>
+        <input type="number" id="item-buy">
+
+        <label for="item-sell">Sell:</label>
+        <input type="number" id="item-sell">
+
+        <label for="item-weight">Weight:</label>
+        <input type="number" id="item-weight">
+
+        <label for="item-attack">Attack:</label>
+        <input type="number" id="item-attack">
+
+        <label for="item-magicattack">MagicAttack:</label>
+        <input type="number" id="item-magicattack">
+
+        <label for="item-defense">Defense:</label>
+        <input type="number" id="item-defense">
+
+        <label for="item-range">Range:</label>
+        <input type="number" id="item-range">
+
+        <label for="item-slots">Slots:</label>
+        <input type="number" id="item-slots">
+
+        <label for="item-jobs">Jobs:</label>
+        <div class="checkbox-group" id="item-jobs">
+            <label><input type="checkbox" name="jobs[]" value="All"> All</label>
+            <label><input type="checkbox" name="jobs[]" value="Acolyte"> Acolyte</label>
+            <label><input type="checkbox" name="jobs[]" value="Alchemist"> Alchemist</label>
+            <label><input type="checkbox" name="jobs[]" value="Archer"> Archer</label>
+            <label><input type="checkbox" name="jobs[]" value="Assassin"> Assassin</label>
+            <label><input type="checkbox" name="jobs[]" value="BardDancer"> BardDancer</label>
+            <label><input type="checkbox" name="jobs[]" value="Blacksmith"> Blacksmith</label>
+            <label><input type="checkbox" name="jobs[]" value="Crusader"> Crusader</label>
+            <label><input type="checkbox" name="jobs[]" value="Gunslinger"> Gunslinger</label>
+            <label><input type="checkbox" name="jobs[]" value="Hunter"> Hunter</label>
+            <label><input type="checkbox" name="jobs[]" value="KagerouOboro"> KagerouOboro</label>
+            <label><input type="checkbox" name="jobs[]" value="Knight"> Knight</label>
+            <label><input type="checkbox" name="jobs[]" value="Mage"> Mage</label>
+            <label><input type="checkbox" name="jobs[]" value="Merchant"> Merchant</label>
+            <label><input type="checkbox" name="jobs[]" value="Monk"> Monk</label>
+            <label><input type="checkbox" name="jobs[]" value="Ninja"> Ninja</label>
+            <label><input type="checkbox" name="jobs[]" value="Novice"> Novice</label>
+            <label><input type="checkbox" name="jobs[]" value="Priest"> Priest</label>
+            <label><input type="checkbox" name="jobs[]" value="Rebellion"> Rebellion</label>
+            <label><input type="checkbox" name="jobs[]" value="Rogue"> Rogue</label>
+            <label><input type="checkbox" name="jobs[]" value="Sage"> Sage</label>
+            <label><input type="checkbox" name="jobs[]" value="SoulLinker"> SoulLinker</label>
+            <label><input type="checkbox" name="jobs[]" value="StarGladiator"> StarGladiator</label>
+            <label><input type="checkbox" name="jobs[]" value="Summoner"> Summoner</label>
+            <label><input type="checkbox" name="jobs[]" value="SuperNovice"> SuperNovice</label>
+            <label><input type="checkbox" name="jobs[]" value="Swordman"> Swordman</label>
+            <label><input type="checkbox" name="jobs[]" value="Taekwon"> Taekwon</label>
+            <label><input type="checkbox" name="jobs[]" value="Thief"> Thief</label>
+            <label><input type="checkbox" name="jobs[]" value="Wizard"> Wizard</label>
+        </div>
+
+        <label for="item-classes">Classes:</label>
+        <div class="checkbox-group" id="item-classes">
+            <label><input type="checkbox" name="classes[]" value="All"> All</label>
+            <label><input type="checkbox" name="classes[]" value="Normal"> Normal</label>
+            <label><input type="checkbox" name="classes[]" value="Upper"> Upper</label>
+            <label><input type="checkbox" name="classes[]" value="Baby"> Baby</label>
+            <label><input type="checkbox" name="classes[]" value="Third"> Third</label>
+            <label><input type="checkbox" name="classes[]" value="Third_Upper"> Third_Upper</label>
+            <label><input type="checkbox" name="classes[]" value="Third_Baby"> Third_Baby</label>
+            <label><input type="checkbox" name="classes[]" value="Fourth"> Fourth</label>
+            <label><input type="checkbox" name="classes[]" value="All_Upper"> All_Upper</label>
+            <label><input type="checkbox" name="classes[]" value="All_Baby"> All_Baby</label>
+            <label><input type="checkbox" name="classes[]" value="All_Third"> All_Third</label>
+        </div>
+
+        <label for="item-gender">Gender:</label>
+        <div class="checkbox-group" id="item-gender">
+            <label><input type="checkbox" name="gender[]" value="Female"> Female</label>
+            <label><input type="checkbox" name="gender[]" value="Male"> Male</label>
+            <label><input type="checkbox" name="gender[]" value="Both"> Both</label>
+        </div>
+
+        <label for="item-locations">Locations:</label>
+        <div class="checkbox-group" id="item-locations">
+            <label><input type="checkbox" name="locations[]" value="Head_Top: true"> Head_Top</label>
+            <label><input type="checkbox" name="locations[]" value="Head_Mid"> Head_Mid</label>
+            <label><input type="checkbox" name="locations[]" value="Head_Low"> Head_Low</label>
+            <label><input type="checkbox" name="locations[]" value="Armor"> Armor</label>
+            <label><input type="checkbox" name="locations[]" value="Right_Hand"> Right_Hand</label>
+            <label><input type="checkbox" name="locations[]" value="Left_Hand"> Left_Hand</label>
+            <label><input type="checkbox" name="locations[]" value="Garment"> Garment</label>
+            <label><input type="checkbox" name="locations[]" value="Shoes"> Shoes</label>
+            <label><input type="checkbox" name="locations[]" value="Right_Accessory"> Right_Accessory</label>
+            <label><input type="checkbox" name="locations[]" value="Left_Accessory"> Left_Accessory</label>
+            <label><input type="checkbox" name="locations[]" value="Costume_Head_Top"> Costume_Head_Top</label>
+            <label><input type="checkbox" name="locations[]" value="Costume_Head_Mid"> Costume_Head_Mid</label>
+            <label><input type="checkbox" name="locations[]" value="Costume_Head_Low"> Costume_Head_Low</label>
+            <label><input type="checkbox" name="locations[]" value="Costume_Garment"> Costume_Garment</label>
+            <label><input type="checkbox" name="locations[]" value="Ammo"> Ammo</label>
+            <label><input type="checkbox" name="locations[]" value="Shadow_Armor"> Shadow_Armor</label>
+            <label><input type="checkbox" name="locations[]" value="Shadow_Weapon"> Shadow_Weapon</label>
+            <label><input type="checkbox" name="locations[]" value="Shadow_Shield"> Shadow_Shield</label>
+            <label><input type="checkbox" name="locations[]" value="Shadow_Shoes"> Shadow_Shoes</label>
+            <label><input type="checkbox" name="locations[]" value="Shadow_Right_Accessory"> Shadow_Right_Accessory</label>
+            <label><input type="checkbox" name="locations[]" value="Shadow_Left_Accessory"> Shadow_Left_Accessory</label>
+            <label><input type="checkbox" name="locations[]" value="Both_Hand"> Both_Hand</label>
+            <label><input type="checkbox" name="locations[]" value="Both_Accessory"> Both_Accessory</label>
+        </div>
+
+        <label for="item-weaponlevel">WeaponLevel:</label>
+        <input type="number" id="item-weaponlevel">
+
+        <label for="item-armorlevel">ArmorLevel:</label>
+        <input type="number" id="item-armorlevel">
+
+        <label for="item-equiplevelmin">EquipLevelMin:</label>
+        <input type="number" id="item-equiplevelmin">
+
+        <label for="item-equiplevelmax">EquipLevelMax:</label>
+        <input type="number" id="item-equiplevelmax">
+
+        <label for="item-refineable">Refineable:</label>
+        <input type="text" id="item-refineable">
+
+        <label for="item-gradable">Gradable:</label>
+        <input type="text" id="item-gradable">
+
+        <label for="item-view">View:</label>
+        <input type="text" id="item-view">
+
+        <label for="item-aliasname">AliasName:</label>
+        <input type="text" id="item-aliasname">
+
+        <label for="item-flags">Flags:</label>
+        <div class="input-group">
+            <textarea id="item-flags" rows="8" placeholder="Exemplo:
+BuyingStore: true
+DeadBranch: true
+Container: true
+UniqueId: true
+BindOnEquip: true
+DropAnnounce: true
+NoConsume: true
+DropEffect: CLIENT">
+            </textarea>
+        </div>
+
+        <label for="item-delay">Delay:</label>
+        <div class="input-delay">
+            <textarea id="item-delay" rows="5" placeholder="Exemplo:
+Duration: 60 // 60s
+Status:">
+            </textarea>
+        </div>
+
+        <label for="item-stack">Stack:</label>
+        <div class="input-group">
+            <textarea id="item-stack" rows="5" placeholder="Exemplo:
+Amount: 999
+Inventory: true
+Cart: true
+Storage: true
+GuildStorage: true">
+            </textarea>
+        </div>
+
+        <label for="item-nouse">NoUse:</label>
+        <div class="input-group">
+            <textarea id="item-nouse" rows="5" placeholder="Exemplo:
+Override: 100
+Sitting: true">
+            </textarea>
+        </div>
+
+        <label for="item-trade">Trade:</label>
+        <div class="checkbox-group" id="item-trade">
+            <label><input type="checkbox" name="trade[]" value="Override"> Override</label>
+            <label><input type="checkbox" name="trade[]" value="NoDrop"> NoDrop</label>
+            <label><input type="checkbox" name="trade[]" value="NoTrade"> NoTrade</label>
+            <label><input type="checkbox" name="trade[]" value="TradePartner"> TradePartner</label>
+            <label><input type="checkbox" name="trade[]" value="NoSell"> NoSell</label>
+            <label><input type="checkbox" name="trade[]" value="NoCart"> NoCart</label>
+            <label><input type="checkbox" name="trade[]" value="NoStorage"> NoStorage</label>
+            <label><input type="checkbox" name="trade[]" value="NoGuildStorage"> NoGuildStorage</label>
+            <label><input type="checkbox" name="trade[]" value="NoMail"> NoMail</label>
+            <label><input type="checkbox" name="trade[]" value="NoAuction"> NoAuction</label>
+        </div>
+
+        <label for="item-script">Script:</label>
+        <textarea id="item-script"></textarea>
+
+        <label for="item-equipscript">EquipScript:</label>
+        <textarea id="item-equipscript"></textarea>
+
+        <label for="item-unequipscript">UnEquipScript:</label>
+        <textarea id="item-unequipscript"></textarea>
+
+        <!-- Botão para Carregar Alterações -->
+        <button id="save-changes-button">Salvar Alterações</button>
+
+        <!-- Modal para Exibir as Alterações -->
+        <div id="changes-modal" style="display: none;">
+            <h3>Alterações Realizadas</h3>
+            <textarea id="yaml-editor-modal" rows="15" cols="50"></textarea>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Variáveis de controle
+            let originalFileName = '';
+            let itemData = [];
+            let currentItem = null;
+
+            // Função para abrir o modal
+            function openModal() {
+                document.getElementById('changes-modal').style.display = 'block';  // Exibe o modal
+            }
+
+            // Função para fechar o modal
+            function closeModal() {
+                document.getElementById('changes-modal').style.display = 'none';  // Fecha o modal
+            }
+
+            // Função para adicionar mensagens ao log
+            function logMessage(message) {
+                const logsContent = document.getElementById('logs-content');
+                if (logsContent) {
+                    logsContent.textContent += message + "\n";
+                    logsContent.scrollTop = logsContent.scrollHeight;  // Auto-scroll para o fim do log
+                } else {
+                    console.log('Elemento de log não encontrado!');
+                }
+            }
+
+            // Função para carregar o arquivo YAML
+            function processFile() {
+                const fileInput = document.getElementById('file-input');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert('Por favor, selecione um arquivo YAML primeiro.');
+                    logMessage('Erro: Nenhum arquivo selecionado.');
+                    return;
+                }
+
+                // Armazenar o nome do arquivo original
+                originalFileName = file.name;
+
+                const reader = new FileReader();
+                reader.onloadstart = function () {
+                    updateProgress(0);  // Iniciar a barra de progresso
+                    logMessage("Iniciando o carregamento do arquivo...");
+                };
+
+                reader.onprogress = function (event) {
+                    if (event.lengthComputable) {
+                        const progress = (event.loaded / event.total) * 100;
+                        updateProgress(progress);
+                    }
+                };
+
+                reader.onload = function (e) {
+                    try {
+                        const yamlContent = e.target.result;
+                        const parsedData = jsyaml.load(yamlContent);
+
+                        // Salva os dados dos itens
+                        itemData = parsedData.Body || [];
+                        loadItemList(itemData);
+
+                        // Finaliza a barra de progresso
+                        updateProgress(100); // Força o progresso para 100% quando o carregamento estiver completo
+                        logMessage(`Arquivo carregado: ${originalFileName}`);
+                    } catch (error) {
+                        alert('Erro ao processar o arquivo YAML: ' + error.message);
+                        logMessage(`Erro ao processar o arquivo: ${error.message}`);
+                    }
+                };
+
+                reader.onerror = function () {
+                    logMessage('Erro ao ler o arquivo.');
+                };
+
+                reader.readAsText(file);
+            }
+
+            // Atualiza a barra de progresso
+            function updateProgress(progress) {
+                const progressBarFill = document.getElementById('progress-bar-fill');
+                const progressText = document.getElementById('progress-bar-fill');
+
+                if (progressBarFill && progressText) {
+                    progressBarFill.style.width = `${progress}%`;
+                    progressText.innerText = `${Math.round(progress)}%`;
+                } else {
+                    console.log('Elementos de progresso não encontrados!');
+                }
+            }
+
+            // Carrega a lista de itens no modal lateral
+            function loadItemList(items) {
+                const itemListElement = document.getElementById('item-list');
+                if (itemListElement) {
+                    itemListElement.innerHTML = ''; // Limpa a lista antes de adicionar
+
+                    if (items.length === 0) {
+                        logMessage("Nenhum item encontrado no arquivo.");
+                        return;
+                    }
+
+                    items.forEach(item => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = `${item.Id} - ${item.Name}`;
+                        listItem.onclick = function () {
+                            loadItemForEdit(item); // Carrega o item ao ser clicado
+                        };
+                        itemListElement.appendChild(listItem);
+                    });
+
+                    // Exibe o modal lateral
+                    document.getElementById('item-list-modal').style.display = 'block';
+                } else {
+                    logMessage('Erro: Elemento de lista de itens não encontrado!');
+                }
+            }
+
+            // Função para atualizar as opções do campo SubType com base no Type
+            function updateSubTypeOptions() {
+                const type = document.getElementById('item-type').value;  // Obtém o valor do Type selecionado
+                const subTypeSelect = document.getElementById('item-subtype');
+                subTypeSelect.innerHTML = ''; // Limpa as opções anteriores
+
+                let options = [];
+
+                // Adiciona as opções de SubType baseadas no tipo selecionado
+                switch (type) {
+                    case 'Weapon':
+                        options = ['Fist', 'Dagger', '1hSword', '2hSword', '1hSpear', '2hSpear', '1hAxe', '2hAxe', 'Mace', 'Staff', 'Bow', 'Knuckle', 'Musical', 'Whip', 'Book', 'Katar', 'Revolver', 'Rifle', 'Gatling', 'Shotgun', 'Grenade', 'Huuma', '2hStaff'];
+                        break;
+                    case 'Ammo':
+                        options = ['Arrow', 'Dagger', 'Bullet', 'Shell', 'Grenade', 'Shuriken', 'Kunai', 'CannonBall', 'ThrowWeapon'];
+                        break;
+                    case 'Card':
+                        options = ['Normal', 'Enchant'];
+                        break;
+                    default:
+                        options = [];
+                        break;
+                }
+
+                // Cria as opções de SubType
+                options.forEach(option => {
+                    const optElement = document.createElement('option');
+                    optElement.value = option;
+                    optElement.textContent = option;
+                    subTypeSelect.appendChild(optElement);
+                });
+            }
+
+            function loadItemForEdit(item) {
+                currentItem = item;  // Inicializa currentItem quando o item for selecionado
+                document.getElementById('item-id').value = item.Id;
+                document.getElementById('item-aegisname').value = item.AegisName;
+                document.getElementById('item-name').value = item.Name;
+                document.getElementById('item-type').value = item.Type;
+                document.getElementById('item-subtype').value = item.SubType || '';
+                document.getElementById('item-buy').value = item.Buy;
+                document.getElementById('item-sell').value = item.Sell;
+                document.getElementById('item-weight').value = item.Weight;
+                document.getElementById('item-attack').value = item.Attack || '';
+                document.getElementById('item-magicattack').value = item.MagicAttack || '';
+                document.getElementById('item-defense').value = item.Defense || '';
+                document.getElementById('item-range').value = item.Range || '';
+                document.getElementById('item-slots').value = item.Slots || '';
+                document.getElementById('item-jobs').value = item.Jobs || '';
+                document.getElementById('item-classes').value = item.Classes || '';
+                document.getElementById('item-gender').value = item.Gender || '';
+                document.getElementById('item-locations').value = item.Locations || '';
+                document.getElementById('item-weaponlevel').value = item.WeaponLevel || '';
+                document.getElementById('item-armorlevel').value = item.ArmorLevel || '';
+                document.getElementById('item-equiplevelmin').value = item.EquipLevelMin || '';
+                document.getElementById('item-equiplevelmax').value = item.EquipLevelMax || '';
+                document.getElementById('item-refineable').value = item.Refineable || '';
+                document.getElementById('item-gradable').value = item.Gradable || '';
+                document.getElementById('item-view').value = item.View || '';
+                document.getElementById('item-aliasname').value = item.AliasName || '';
+                document.getElementById('item-flags').value = item.Flags || '';
+                document.getElementById('item-delay').value = item.Delay || '';
+                document.getElementById('item-stack').value = item.Stack || '';
+                document.getElementById('item-nouse').value = item.NoUse || '';
+                document.getElementById('item-trade').value = item.Trade || '';
+                document.getElementById('item-script').value = item.Script || '';
+                document.getElementById('item-equipscript').value = item.EquipScript || '';
+                document.getElementById('item-unequipscript').value = item.UnEquipScript || '';
+
+                document.getElementById('edit-item-form').style.display = 'block';
+            }
+
+            // Função para processar campos de seleção (checkboxes) e formatá-los corretamente para YAML
+            function processCheckboxField(fieldId) {
+                const selectedValues = getCheckedValues(fieldId);  // Obtém os valores selecionados
+                if (selectedValues === null || selectedValues.length === 0) {
+                    return null;  // Se nenhum valor for selecionado, retorna null
+                }
+
+                // Adiciona cada valor em uma nova linha no YAML, sem caracteres extras ou 'true'
+                return selectedValues.join("\n");  // Cada valor será em uma nova linha no YAML
+            }
+
+            // Função para obter os valores dos checkboxes de Jobs e formatar corretamente
+            function getSelectedJobs() {
+                const selectedJobs = [];
+                const checkboxes = document.querySelectorAll('input[name="jobs[]"]:checked');
+
+                checkboxes.forEach(checkbox => {
+                    selectedJobs.push(checkbox.value);
+                });
+
+                // Se houver pelo menos um valor selecionado, adiciona a quebra de linha antes de cada valor
+
+                if (selectedJobs.length > 0) {
+                    return selectedJobs.join("\n"); // Adiciona um \n para separar os valores
+                }
+
+                return null; // Se não houver valores selecionados, retorna null
+            }
+
+            // Função para salvar as informações inseridas
+            function saveItem() {
+                if (!currentItem) {
+                    alert('Nenhum item selecionado para editar!');
+                    return;
+                }
+
+                const modifiedItem = {};
+
+                // Função para adicionar valores ao objeto se o campo estiver preenchido ou foi modificado
+                function addModifiedField(formFieldId, yamlFieldName) {
+                    const fieldValue = getFieldValue(formFieldId);
+                    if (fieldValue !== null && fieldValue !== "") {
+                        modifiedItem[yamlFieldName] = fieldValue;  // Adiciona o campo com o nome correto no YAML
+                    }
+                }
+
+                // Usando mapeamento correto dos nomes dos campos
+                modifiedItem.Id = getFieldValue('item-id');  // O ID deve ser sempre carregado como um número
+
+                // Mapeando campos do formulário para os campos YAML
+                addModifiedField('item-name', 'Name');
+                addModifiedField('item-aegisname', 'AegisName');
+                addModifiedField('item-type', 'Type');
+                addModifiedField('item-subtype', 'SubType');
+                addModifiedField('item-buy', 'Buy');
+                addModifiedField('item-sell', 'Sell');
+                addModifiedField('item-weight', 'Weight');
+                addModifiedField('item-attack', 'Attack');
+                addModifiedField('item-magicattack', 'MagicAttack');
+                addModifiedField('item-defense', 'Defense');
+                addModifiedField('item-range', 'Range');
+                addModifiedField('item-slots', 'Slots');
+
+                // Pegando os valores de Jobs
+                const selectedJobs = getSelectedJobs();
+
+                if (selectedJobs) {
+                    modifiedItem.Jobs = selectedJobs;  // Garante que o primeiro valor seja precedido por uma quebra de linha
+                }
+
+                const classes = processCheckboxField('classes[]');
+                if (classes !== null) modifiedItem.Classes = classes;
+
+                const gender = processCheckboxField('gender[]');
+                if (gender !== null) modifiedItem.Gender = gender;
+
+                const locations = processCheckboxField('locations[]');
+                if (locations !== null) modifiedItem.Locations = locations;
+
+                const trade = processCheckboxField('trade[]');
+                if (trade !== null) modifiedItem.Trade = trade;
+
+                const stack = processTextAreaField('item-stack');
+                if (stack !== null) modifiedItem.Stack = stack;
+
+                const delay = processTextAreaField('item-delay');
+                if (delay !== null) modifiedItem.Delay = delay;
+
+                const flags = processTextAreaField('item-flags');
+                if (flags !== null) modifiedItem.Flags = flags;
+
+                const noUse = processTextAreaField('item-nouse');
+                if (noUse !== null) modifiedItem.NoUse = noUse;
+
+                // Campos adicionais (se modificados ou preenchidos)
+                addModifiedField('item-script', 'Script');
+                addModifiedField('item-equipscript', 'EquipScript');
+                addModifiedField('item-unequipscript', 'UnEquipScript');
+
+                // A seguir você continua o processo de salvar outros campos, por exemplo:
+                modifiedItem.Name = document.getElementById('item-name').value;
+
+                // Exibindo no console para verificar
+                console.log(modifiedItem);
+
+                // Convertendo para YAML e exibindo na modal
+                const modifiedYaml = jsyaml.dump({ Body: [modifiedItem] });
+
+                // Exibindo no modal
+                document.getElementById('yaml-editor-modal').value = modifiedYaml;
+
+                // Abre o modal para o usuário ver as alterações
+                openModal();
+            }
+
+            // Função para obter o valor de um campo
+            function getFieldValue(fieldId) {
+                const fieldValue = document.getElementById(fieldId).value;
+
+                // Se for um valor numérico (como o ID), converte para número
+                if (fieldId === 'item-id') {
+                    return fieldValue ? parseInt(fieldValue, 10) : null; // Converte o valor do ID para número
+                }
+
+                // Se o campo for um número (não ID), converte para número
+                if (fieldValue && !isNaN(fieldValue)) {
+                    return parseFloat(fieldValue);  // Converte o valor para número
+                }
+
+                // Retorna null se o campo estiver vazio ou se for uma string não numérica
+                return fieldValue === "" ? null : fieldValue;
+            }
+
+            // Função para obter os valores dos checkboxes. Se não estiver marcado, retorna null.
+            function getCheckedValues(fieldName) {
+                const checkboxes = document.querySelectorAll(`input[name="${fieldName}"]:checked`);
+                if (checkboxes.length === 0) {
+                    return null; // Se nenhum checkbox estiver marcado, retorna null
+                }
+                return Array.from(checkboxes).map(checkbox => checkbox.value);
+            }
+
+            // Função para processar campos de texto (textarea) e retornar null se vazio
+            function processTextAreaField(fieldId) {
+                const fieldValue = document.getElementById(fieldId).value;
+
+                // Se o campo estiver vazio, retorna null
+                if (fieldValue.trim() === "") {
+                    return null;
+                }
+
+                // Se o campo não estiver vazio, e for de múltiplas linhas, vamos processá-lo.
+                // Vamos manter a formatação do YAML sem adicionar '|' ou qualquer formatação extra.
+
+                // Aqui verificamos se o campo possui múltiplas linhas
+                if (fieldValue.includes("\n")) {
+                    // Remove as quebras de linha adicionais e formata corretamente o valor
+                    return fieldValue.split('\n').map(line => line.trim()).join("\n");
+                }
+
+                return fieldValue;  // Se for uma única linha, retorna o valor sem alterações
+            }
+
+            // Função para exibir logs no console
+            function logMessage(message) {
+                console.log(message);
+            }
+
+            // Agora garantimos que o evento de clique para salvar as alterações é configurado corretamente
+            document.getElementById('save-changes-button').addEventListener('click', saveItem);
+
+            // Expor as funções globalmente
+            window.updateSubTypeOptions = updateSubTypeOptions;
+            window.processFile = processFile;
+            window.saveItem = saveItem;
+
+        });
+
+    </script>
+
+</body>
+
+</html>
